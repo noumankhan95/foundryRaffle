@@ -18,7 +18,9 @@ contract HelperConfig {
     NetworkConfig public activeNetworkConfig;
 
     constructor() {
-        if (block.chainid == 1) {} else if (block.chainid == 11155111) {
+        if (block.chainid == 1) {
+            activeNetworkConfig = getEthConfig();
+        } else if (block.chainid == 11155111) {
             activeNetworkConfig = getSepoliaEthConfig();
         } else if (block.chainid == 31337) {
             activeNetworkConfig = getAnvilEthConfig();
@@ -31,7 +33,7 @@ contract HelperConfig {
         return activeNetworkConfig;
     }
 
-    function getEthConfig() external view returns (NetworkConfig memory) {
+    function getEthConfig() internal pure returns (NetworkConfig memory) {
         return
             NetworkConfig({
                 _updateInterval: 60,
@@ -49,7 +51,7 @@ contract HelperConfig {
 
     function getSepoliaEthConfig()
         internal
-        view
+        pure
         returns (NetworkConfig memory)
     {
         return
@@ -69,7 +71,7 @@ contract HelperConfig {
 
     function getAnvilEthConfig() internal returns (NetworkConfig memory) {
         V3AggregatorMock priceFeed = new V3AggregatorMock(18, 2000 * 10 ** 18);
-        VRFMock vrfMock = new VRFMock(0.1 * 10 ** 18, 0.0001 * 10 ** 18);
+        // VRFMock vrfMock = new VRFMock(0.1 * 10 ** 18, 0.0001 * 10 ** 18);
         return
             NetworkConfig({
                 _updateInterval: 60,
