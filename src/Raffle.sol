@@ -74,12 +74,6 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         i_callbackGasLimit = callbackGasLimit;
     }
 
-    modifier onlyOwnerCanCall() {
-        if (msg.sender == i_owner) {
-            revert Raffle__NotOwner();
-        }
-        _;
-    }
     modifier minEthAmount() {
         if (msg.value.getPrice(i_priceFeed) < Minimum_USD) {
             revert Raffle__NotEnoughEth({
@@ -162,7 +156,6 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         s_requests[_requestId].fulfilled = true;
         s_requests[_requestId].randomWords = _randomWords;
         emit RequestFulfilled(_requestId, _randomWords);
-
         uint256 winnerIndex = s_participants.length % _randomWords[0];
         address winnerAddress = s_participants[winnerIndex];
         emit WinnerPicked(winnerAddress);
