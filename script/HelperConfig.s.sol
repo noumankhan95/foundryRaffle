@@ -5,15 +5,19 @@ import {V3AggregatorMock} from "test/Mocks/V3AggregatorMock.sol";
 import {VRFMock} from "test/Mocks/VRFMock.sol";
 
 contract HelperConfig {
+    address public constant FOUNDRY_DEFAULT_SENDER =
+        0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
     struct NetworkConfig {
         uint256 _updateInterval;
         AggregatorV3Interface _priceFeed;
         bytes32 keyHash;
-        uint256 subId;
+        uint64 subId;
         uint16 requestConfirmations;
         uint32 callbackGasLimit;
         uint32 numWords;
         bytes extraArgs;
+        address account;
+        address vrfCoordinatorV2_5;
     }
     NetworkConfig public activeNetworkConfig;
 
@@ -41,11 +45,13 @@ contract HelperConfig {
                     0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
                 ),
                 keyHash: 0x6c3699283bda56ad74f6b855546325b68d482e984b2f7c8c9d8e2f8e2f8e2f8e,
-                subId: 1234,
+                subId: 0,
                 requestConfirmations: 3,
                 callbackGasLimit: 100000,
                 numWords: 1,
-                extraArgs: ""
+                extraArgs: "",
+                account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
+                vrfCoordinatorV2_5: 0xD7f86b4b8Cae7D942340FF628F82735b7a20893a
             });
     }
 
@@ -61,27 +67,32 @@ contract HelperConfig {
                     0x694AA1769357215DE4FAC081bf1f309aDC325306
                 ),
                 keyHash: 0x6c3699283bda56ad74f6b855546325b68d482e984b2f7c8c9d8e2f8e2f8e2f8e,
-                subId: 1234,
+                subId: 0,
                 requestConfirmations: 3,
                 callbackGasLimit: 100000,
                 numWords: 1,
-                extraArgs: ""
+                extraArgs: "",
+                account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
+                vrfCoordinatorV2_5: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B
             });
     }
 
     function getAnvilEthConfig() internal returns (NetworkConfig memory) {
         V3AggregatorMock priceFeed = new V3AggregatorMock(18, 2000 * 10 ** 18);
-        // VRFMock vrfMock = new VRFMock(0.1 * 10 ** 18, 0.0001 * 10 ** 18);
+        VRFMock vrfMock = new VRFMock(0.1 * 10 ** 18, 0.0001 * 10 ** 18);
+        uint64 subId = vrfMock.createSubscription();
         return
             NetworkConfig({
                 _updateInterval: 60,
                 _priceFeed: AggregatorV3Interface(address(priceFeed)),
                 keyHash: 0x6c3699283bda56ad74f6b855546325b68d482e984b2f7c8c9d8e2f8e2f8e2f8e,
-                subId: 1234,
+                subId: subId,
                 requestConfirmations: 3,
                 callbackGasLimit: 100000,
                 numWords: 1,
-                extraArgs: ""
+                extraArgs: "",
+                account: FOUNDRY_DEFAULT_SENDER,
+                vrfCoordinatorV2_5: address(vrfMock)
             });
     }
 }
