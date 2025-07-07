@@ -16,23 +16,25 @@ contract DeployContract {
     constructor() {
         HelperConfig config = new HelperConfig();
         activeNetworkConfig = config.getConfig();
+        uint64 subId;
         if (activeNetworkConfig.subId == 0) {
             CreateSubscription createSubscription = new CreateSubscription();
-            uint64 subId = createSubscription.createSubscriptionForLocal(
+            subId = createSubscription.createSubscriptionForLocal(
                 activeNetworkConfig.vrfCoordinatorV2_5
             );
             FundContract fundContract = new FundContract();
             fundContract.fundTheLocalSubscription(
                 activeNetworkConfig.vrfCoordinatorV2_5,
                 subId,
-                1e18
+                1e18,
+                activeNetworkConfig.linkToken
             );
         }
         raffleContract = new Raffle(
             activeNetworkConfig._updateInterval,
             activeNetworkConfig._priceFeed,
             activeNetworkConfig.keyHash,
-            activeNetworkConfig.subId,
+            subId,
             activeNetworkConfig.requestConfirmations,
             activeNetworkConfig.callbackGasLimit,
             activeNetworkConfig.numWords,
@@ -41,12 +43,20 @@ contract DeployContract {
         AddConsumer addConsumer = new AddConsumer();
         addConsumer.addConsumerToLocalSubscription(
             activeNetworkConfig.vrfCoordinatorV2_5,
-            activeNetworkConfig.subId,
+            subId,
             address(raffleContract)
         );
     }
 
     function getRaffleContract() external view returns (Raffle) {
         return raffleContract;
+    }
+
+    function getActiveNetworkConfig()
+        external
+        view
+        returns (HelperConfig.NetworkConfig memory)
+    {
+        return activeNetworkConfig;
     }
 }

@@ -13,12 +13,26 @@ contract CreateSubscription {
 }
 
 contract FundContract {
+    uint64 private constant LOCAL_CHAIN_ID = 31337;
+
     function fundTheLocalSubscription(
         address vrfCordinator,
         uint64 subId,
-        uint64 _amount
+        uint64 _amount,
+        address linkToken
     ) external {
-        VRFMock(vrfCordinator).fundSubscription(subId, _amount);
+        if (block.chainid == LOCAL_CHAIN_ID) {
+            VRFMock(vrfCordinator).fundSubscription(subId, _amount);
+        } else {
+            bool success = LinkToken(linkToken).transferAndCall(
+                vrfCordinator,
+                _amount,
+                abi.encode(subId)
+            );
+            if (!success) {
+                revert("Transfer and call failed");
+            }
+        }
     }
 }
 

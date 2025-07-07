@@ -3,6 +3,7 @@ pragma solidity ^0.8.18;
 import {AggregatorV3Interface} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {V3AggregatorMock} from "test/Mocks/V3AggregatorMock.sol";
 import {VRFMock} from "test/Mocks/VRFMock.sol";
+import {LinkToken} from "test/Mocks/ERC20Link.sol";
 
 contract HelperConfig {
     address public constant FOUNDRY_DEFAULT_SENDER =
@@ -18,6 +19,7 @@ contract HelperConfig {
         bytes extraArgs;
         address account;
         address vrfCoordinatorV2_5;
+        address linkToken;
     }
     NetworkConfig public activeNetworkConfig;
 
@@ -51,7 +53,8 @@ contract HelperConfig {
                 numWords: 1,
                 extraArgs: "",
                 account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-                vrfCoordinatorV2_5: 0xD7f86b4b8Cae7D942340FF628F82735b7a20893a
+                vrfCoordinatorV2_5: 0xD7f86b4b8Cae7D942340FF628F82735b7a20893a,
+                linkToken: 0x514910771AF9Ca656af840dff83E8264EcF986CA
             });
     }
 
@@ -73,7 +76,8 @@ contract HelperConfig {
                 numWords: 1,
                 extraArgs: "",
                 account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-                vrfCoordinatorV2_5: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B
+                vrfCoordinatorV2_5: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
+                linkToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789
             });
     }
 
@@ -81,6 +85,7 @@ contract HelperConfig {
         V3AggregatorMock priceFeed = new V3AggregatorMock(18, 2000 * 10 ** 18);
         VRFMock vrfMock = new VRFMock(0.1 * 10 ** 18, 0.0001 * 10 ** 18);
         uint64 subId = vrfMock.createSubscription();
+        LinkToken linkTokenAddress = new LinkToken();
         return
             NetworkConfig({
                 _updateInterval: 60,
@@ -92,7 +97,8 @@ contract HelperConfig {
                 numWords: 1,
                 extraArgs: "",
                 account: FOUNDRY_DEFAULT_SENDER,
-                vrfCoordinatorV2_5: address(vrfMock)
+                vrfCoordinatorV2_5: address(vrfMock),
+                linkToken: address(linkTokenAddress)
             });
     }
 }
