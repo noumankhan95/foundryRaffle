@@ -4,8 +4,10 @@ import {AggregatorV3Interface} from "lib/chainlink-brownie-contracts/contracts/s
 import {V3AggregatorMock} from "test/Mocks/V3AggregatorMock.sol";
 import {VRFMock} from "test/Mocks/VRFMock.sol";
 import {LinkToken} from "test/Mocks/ERC20Link.sol";
+import {Script} from "forge-std/Script.sol";
+import {console} from "forge-std/console.sol";
 
-contract HelperConfig {
+contract HelperConfig is Script {
     address public constant FOUNDRY_DEFAULT_SENDER =
         0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
     struct NetworkConfig {
@@ -82,10 +84,23 @@ contract HelperConfig {
     }
 
     function getAnvilEthConfig() internal returns (NetworkConfig memory) {
+        vm.startBroadcast(FOUNDRY_DEFAULT_SENDER);
         V3AggregatorMock priceFeed = new V3AggregatorMock(18, 2000 * 10 ** 18);
         VRFMock vrfMock = new VRFMock(0.1 * 10 ** 18, 0.0001 * 10 ** 18);
         uint64 subId = vrfMock.createSubscription();
+        (
+            uint96 balance,
+            uint64 reqCount,
+            address owner,
+            address[] memory consumers
+        ) = vrfMock.getSubscription(subId);
+        console.log("VRF Owner", address(vrfMock.owner()));
+        console.log("VRF Subscription ID", subId);
+        console.log("VRF Subscription Balance", balance);
+        console.log("VRF Subscription Request Count", reqCount);
+        console.log("VRF Subscription Owner", owner);
         LinkToken linkTokenAddress = new LinkToken();
+        vm.stopBroadcast();
         return
             NetworkConfig({
                 _updateInterval: 60,

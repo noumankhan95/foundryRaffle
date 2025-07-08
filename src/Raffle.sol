@@ -176,6 +176,14 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         return (request.fulfilled, request.randomWords);
     }
 
+    function getOwner() public view returns (address) {
+        return i_owner;
+    }
+
+    function getParticipants() public view returns (address[] memory) {
+        return s_participants;
+    }
+
     receive() external payable {}
 
     fallback() external payable {}

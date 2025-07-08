@@ -6,8 +6,9 @@ import {Raffle} from "../src/Raffle.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
 import {AddConsumer, FundContract, CreateSubscription} from "./Interactions.s.sol";
 import {VRFMock} from "../test/Mocks/VRFMock.sol";
+import {Script} from "forge-std/Script.sol";
 
-contract DeployContract {
+contract DeployContract is Script {
     HelperConfig.NetworkConfig activeNetworkConfig;
     Raffle private immutable raffleContract;
     uint96 public constant MOCK_BASE_FEE = 0.25 ether;
@@ -16,35 +17,42 @@ contract DeployContract {
     constructor() {
         HelperConfig config = new HelperConfig();
         activeNetworkConfig = config.getConfig();
-        uint64 subId;
+
         if (activeNetworkConfig.subId == 0) {
             CreateSubscription createSubscription = new CreateSubscription();
-            subId = createSubscription.createSubscriptionForLocal(
-                activeNetworkConfig.vrfCoordinatorV2_5
-            );
+            activeNetworkConfig.subId = createSubscription
+                .createSubscriptionForLocal(
+                    activeNetworkConfig.vrfCoordinatorV2_5,
+                    activeNetworkConfig.account
+                );
             FundContract fundContract = new FundContract();
             fundContract.fundTheLocalSubscription(
                 activeNetworkConfig.vrfCoordinatorV2_5,
-                subId,
+                activeNetworkConfig.subId,
                 1e18,
-                activeNetworkConfig.linkToken
+                activeNetworkConfig.linkToken,
+                activeNetworkConfig.account
             );
         }
+        vm.startBroadcast(activeNetworkConfig.account);
         raffleContract = new Raffle(
             activeNetworkConfig._updateInterval,
             activeNetworkConfig._priceFeed,
             activeNetworkConfig.keyHash,
-            subId,
+            activeNetworkConfig.subId,
             activeNetworkConfig.requestConfirmations,
             activeNetworkConfig.callbackGasLimit,
             activeNetworkConfig.numWords,
             activeNetworkConfig.extraArgs
         );
+        vm.stopBroadcast();
+
         AddConsumer addConsumer = new AddConsumer();
         addConsumer.addConsumerToLocalSubscription(
             activeNetworkConfig.vrfCoordinatorV2_5,
-            subId,
-            address(raffleContract)
+            activeNetworkConfig.subId,
+            address(raffleContract),
+            activeNetworkConfig.account
         );
     }
 
