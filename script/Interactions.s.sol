@@ -28,7 +28,7 @@ contract FundContract is Script {
     ) external {
         vm.startBroadcast(account);
         if (block.chainid == LOCAL_CHAIN_ID) {
-            VRFMock(vrfCordinator).fundSubscription(subId, _amount);
+            VRFMock(vrfCordinator).fundSubscription(subId, 3 ether * 100);
         } else {
             bool success = LinkToken(linkToken).transferAndCall(
                 vrfCordinator,

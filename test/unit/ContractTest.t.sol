@@ -92,16 +92,16 @@ contract TestRaffle is Test {
         assert(
             raffleContract.getRaffleState() == Raffle.RAFFLE_STATUS.CALCULATING
         );
-        vm.prank(activeNetworkConfig.account);
-        VRFMock(address(activeNetworkConfig.vrfCoordinatorV2_5))
-            .fundSubscriptionWithNative{value: 1 ether}(
-            activeNetworkConfig.subId
-        );
+        // VRFMock(address(activeNetworkConfig.vrfCoordinatorV2_5))
+        //     .fundSubscriptionWithNative{value: 1 ether}(
+        //     activeNetworkConfig.subId
+        // );
         // link.transferAndCall(
         //     activeNetworkConfig.vrfCoordinatorV2_5,
         //     1 ether, // or whatever amount you need
         //     abi.encode(activeNetworkConfig.subId)
         // );
+        vm.prank(activeNetworkConfig.account);
 
         VRFMock(address(activeNetworkConfig.vrfCoordinatorV2_5))
             .fulfillRandomWords(
