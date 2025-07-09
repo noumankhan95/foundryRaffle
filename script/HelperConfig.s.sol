@@ -14,7 +14,7 @@ contract HelperConfig is Script {
         uint256 _updateInterval;
         AggregatorV3Interface _priceFeed;
         bytes32 keyHash;
-        uint64 subId;
+        uint256 subId;
         uint16 requestConfirmations;
         uint32 callbackGasLimit;
         uint32 numWords;
@@ -85,20 +85,19 @@ contract HelperConfig is Script {
 
     function getAnvilEthConfig() internal returns (NetworkConfig memory) {
         vm.startBroadcast(FOUNDRY_DEFAULT_SENDER);
-        V3AggregatorMock priceFeed = new V3AggregatorMock(18, 2000 * 10 ** 18);
-        VRFMock vrfMock = new VRFMock(0.1 * 10 ** 18, 0.0001 * 10 ** 18);
-        uint64 subId = vrfMock.createSubscription();
+        vm.deal(FOUNDRY_DEFAULT_SENDER, 100 ether);
+        V3AggregatorMock priceFeed = new V3AggregatorMock(18, 2000 * 1e18);
+        VRFMock vrfMock = new VRFMock(0.025 ether, 1e9);
+        console.log("in helper config", address(vrfMock));
+        uint256 subId = vrfMock.createSubscription();
         (
             uint96 balance,
+            uint96 nativeBalance,
             uint64 reqCount,
-            address owner,
+            address subOwner,
             address[] memory consumers
         ) = vrfMock.getSubscription(subId);
-        console.log("VRF Owner", address(vrfMock.owner()));
-        console.log("VRF Subscription ID", subId);
-        console.log("VRF Subscription Balance", balance);
-        console.log("VRF Subscription Request Count", reqCount);
-        console.log("VRF Subscription Owner", owner);
+
         LinkToken linkTokenAddress = new LinkToken();
         vm.stopBroadcast();
         return
@@ -108,7 +107,7 @@ contract HelperConfig is Script {
                 keyHash: 0x6c3699283bda56ad74f6b855546325b68d482e984b2f7c8c9d8e2f8e2f8e2f8e,
                 subId: subId,
                 requestConfirmations: 3,
-                callbackGasLimit: 100000,
+                callbackGasLimit: 500000,
                 numWords: 1,
                 extraArgs: "",
                 account: FOUNDRY_DEFAULT_SENDER,

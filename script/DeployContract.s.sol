@@ -11,7 +11,7 @@ import {Script} from "forge-std/Script.sol";
 contract DeployContract is Script {
     HelperConfig.NetworkConfig activeNetworkConfig;
     Raffle private immutable raffleContract;
-    uint96 public constant MOCK_BASE_FEE = 0.25 ether;
+    uint96 public constant MOCK_BASE_FEE = 0.025 ether;
     uint96 public constant MOCK_GAS_PRICE_LINK = 1e9;
 
     constructor() {
@@ -25,15 +25,15 @@ contract DeployContract is Script {
                     activeNetworkConfig.vrfCoordinatorV2_5,
                     activeNetworkConfig.account
                 );
-            FundContract fundContract = new FundContract();
-            fundContract.fundTheLocalSubscription(
-                activeNetworkConfig.vrfCoordinatorV2_5,
-                activeNetworkConfig.subId,
-                1e18,
-                activeNetworkConfig.linkToken,
-                activeNetworkConfig.account
-            );
         }
+        FundContract fundContract = new FundContract();
+        fundContract.fundTheLocalSubscription(
+            activeNetworkConfig.vrfCoordinatorV2_5,
+            activeNetworkConfig.subId,
+            3 ether,
+            activeNetworkConfig.linkToken,
+            activeNetworkConfig.account
+        );
         vm.startBroadcast(activeNetworkConfig.account);
         raffleContract = new Raffle(
             activeNetworkConfig._updateInterval,
@@ -43,7 +43,8 @@ contract DeployContract is Script {
             activeNetworkConfig.requestConfirmations,
             activeNetworkConfig.callbackGasLimit,
             activeNetworkConfig.numWords,
-            activeNetworkConfig.extraArgs
+            activeNetworkConfig.extraArgs,
+            activeNetworkConfig.vrfCoordinatorV2_5
         );
         vm.stopBroadcast();
 

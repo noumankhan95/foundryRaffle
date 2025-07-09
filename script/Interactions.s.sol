@@ -9,7 +9,7 @@ contract CreateSubscription is Script {
     function createSubscriptionForLocal(
         address vrfCordinator,
         address account
-    ) external returns (uint64 subId) {
+    ) external returns (uint256 subId) {
         vm.startBroadcast(account);
         subId = VRFMock(vrfCordinator).createSubscription();
         vm.stopBroadcast();
@@ -21,7 +21,7 @@ contract FundContract is Script {
 
     function fundTheLocalSubscription(
         address vrfCordinator,
-        uint64 subId,
+        uint256 subId,
         uint64 _amount,
         address linkToken,
         address account
@@ -46,7 +46,7 @@ contract FundContract is Script {
 contract AddConsumer is Script {
     function addConsumerToLocalSubscription(
         address vrfCordinator,
-        uint64 subId,
+        uint256 subId,
         address consumer,
         address account
     ) external {

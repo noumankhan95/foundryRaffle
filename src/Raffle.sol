@@ -33,11 +33,11 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
 
     //CONTRACT VARIABLES
     address private immutable i_owner;
-    uint256 public immutable interval;
+    uint256 public immutable i_interval;
     uint256 public lastTimeStamp;
-    uint256 internal constant Minimum_USD = 5 * 10e18;
+    uint256 internal constant Minimum_USD = 5 * 1e18;
     address[] public s_participants;
-    mapping(address => uint256) s_participantsAmount;
+    mapping(address => uint256) public s_participantsAmount;
     RAFFLE_STATUS private s_raffleState;
     address public s_prevWinner;
     //VRF AND AUTOMATION VARS
@@ -60,13 +60,14 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         uint16 requestConfirmations,
         uint32 callbackGasLimit,
         uint32 numWords,
-        bytes memory extraArgs
+        bytes memory extraArgs,
+        address vrfCordinator
     )
         AutomationCompatibleInterface()
-        VRFConsumerBaseV2Plus(address(_priceFeed))
+        VRFConsumerBaseV2Plus(address(vrfCordinator))
     {
         i_owner = msg.sender;
-        interval = _updateInterval;
+        i_interval = _updateInterval;
         lastTimeStamp = block.timestamp;
         i_priceFeed = _priceFeed;
         i_keyHash = keyHash;
@@ -98,7 +99,7 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         returns (bool upkeepNeeded, bytes memory /* performData */)
     {
         upkeepNeeded =
-            ((block.timestamp - lastTimeStamp) > interval) &&
+            ((block.timestamp - lastTimeStamp) > i_interval) &&
             s_raffleState == RAFFLE_STATUS.OPEN &&
             s_participants.length > 0 &&
             address(this).balance > 0;
@@ -131,9 +132,7 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
                 callbackGasLimit: i_callbackGasLimit,
                 numWords: numWords,
                 extraArgs: VRFV2PlusClient._argsToBytes(
-                    VRFV2PlusClient.ExtraArgsV1({
-                        nativePayment: enableNativePayment
-                    })
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: true})
                 )
             })
         );
@@ -151,15 +150,18 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
     function fulfillRandomWords(
         uint256 _requestId,
         uint256[] calldata _randomWords
-    ) internal override onlyOwner {
+    ) internal override {
         require(s_requests[_requestId].exists, "request not found");
         s_requests[_requestId].fulfilled = true;
         s_requests[_requestId].randomWords = _randomWords;
         emit RequestFulfilled(_requestId, _randomWords);
-        uint256 winnerIndex = s_participants.length % _randomWords[0];
+        uint256 winnerIndex = _randomWords[0] % s_participants.length;
         address winnerAddress = s_participants[winnerIndex];
-        emit WinnerPicked(winnerAddress);
         s_prevWinner = winnerAddress;
+        s_participants = new address[](0);
+        // s_participantsAmount = new mapping(address => uint256)();
+        s_raffleState = RAFFLE_STATUS.OPEN;
+        emit WinnerPicked(winnerAddress);
         (bool success, ) = payable(winnerAddress).call{
             value: address(this).balance
         }("");
@@ -182,6 +184,14 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
 
     function getParticipants() public view returns (address[] memory) {
         return s_participants;
+    }
+
+    function getInterval() external view returns (uint256) {
+        return i_interval;
+    }
+
+    function getRaffleState() external view returns (RAFFLE_STATUS) {
+        return s_raffleState;
     }
 
     receive() external payable {}
